@@ -6,6 +6,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Math/Vector.h"
 
 // Sets Default Values
 APG_FPS_DistanceBasedScale::APG_FPS_DistanceBasedScale()
@@ -13,8 +14,9 @@ APG_FPS_DistanceBasedScale::APG_FPS_DistanceBasedScale()
 	PrimaryActorTick.bCanEverTick = false;
 
 	selectedObjectSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SelectedObjectSpringArmComponent"));
-	selectedObjectSpringArm->SetupAttachment(cameraSpringArm, USpringArmComponent::SocketName);
-	selectedObjectSpringArm->TargetArmLength = objectSpringArmLength;
+	selectedObjectSpringArm->SetupAttachment(camera);
+	//selectedObjectSpringArm->TargetArmLength = objectSpringArmLength;
+	selectedObjectSpringArm->TargetArmLength = 1000.f;
 	
 	SetbCanSelect(true);
 	SetSelectDistance(1000.f);
@@ -23,7 +25,8 @@ APG_FPS_DistanceBasedScale::APG_FPS_DistanceBasedScale()
 void APG_FPS_DistanceBasedScale::BeginPlay()
 {
 	Super::BeginPlay();
-
+	UE_LOG(LogTemp, Log, TEXT("%f"), objectSpringArmLength);
+	UE_LOG(LogTemp, Log, TEXT("%f"), selectedObjectSpringArm->TargetArmLength);
 }
 
 void APG_FPS_DistanceBasedScale::Tick(float DeltaTime)
@@ -37,15 +40,14 @@ void APG_FPS_DistanceBasedScale::SelectObject()
 {
 	if (GetbCanSelect())
 	{
-		FHitResult hitResultLocal = GetRaycastHitResult(bDebugMode);
+		hitResult = GetRaycastHitResult(bDebugMode);
 
-		if (hitResultLocal.bBlockingHit && hitResultLocal.Component->IsSimulatingPhysics())
+		if (hitResult.bBlockingHit && hitResult.Component->IsSimulatingPhysics())
 		{
-			hitResultLocal.Component->SetSimulatePhysics(false);
-			hitResultLocal.Component->SetupAttachment(selectedObjectSpringArm, USpringArmComponent::SocketName);
-			UE_LOG(LogTemp, Log, TEXT("You hit: %s"), *hitResultLocal.Actor->GetName());
+			hitResult.Component->SetSimulatePhysics(false);
+			hitResult.Actor->AttachToComponent(selectedObjectSpringArm, FAttachmentTransformRules::KeepWorldTransform, USpringArmComponent::SocketName);
 
-
+			UE_LOG(LogTemp, Log, TEXT("You hit: %s"), *hitResult.Actor->GetName());
 		}
 	}
 }
