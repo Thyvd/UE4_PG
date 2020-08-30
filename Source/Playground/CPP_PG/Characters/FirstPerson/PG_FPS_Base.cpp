@@ -32,6 +32,14 @@ void APG_FPS_Base::BeginPlay()
 	
 }
 
+// Called every frame
+void APG_FPS_Base::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+}
+
+// Movement Functions
 void APG_FPS_Base::MoveForward(float rate)
 {
 	if (rate != 0)
@@ -39,7 +47,6 @@ void APG_FPS_Base::MoveForward(float rate)
 		AddMovementInput(cameraSpringArm->GetForwardVector(), rate);
 	}
 }
-
 void APG_FPS_Base::MoveRight(float rate)
 {
 	if (rate != 0)
@@ -47,7 +54,6 @@ void APG_FPS_Base::MoveRight(float rate)
 		AddMovementInput(cameraSpringArm->GetRightVector(), rate);
 	}
 }
-
 void APG_FPS_Base::MouseY(float rate)
 {
 	if (rate != 0)
@@ -55,7 +61,6 @@ void APG_FPS_Base::MouseY(float rate)
 		AddControllerPitchInput(rate * GetMouseYSensitivity());
 	}
 }
-
 void APG_FPS_Base::MouseX(float rate)
 {
 	if (rate != 0)
@@ -64,12 +69,13 @@ void APG_FPS_Base::MouseX(float rate)
 	}
 }
 
-// Called every frame
-void APG_FPS_Base::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
+/** Getters */
+float APG_FPS_Base::GetMouseYSensitivity() { return mouseYSensitivity; }
+float APG_FPS_Base::GetMouseXSensitivity() { return mouseXSensitivity; }
 
-}
+/** Setters */
+void APG_FPS_Base::SetMouseYSensitivity(float sensitivity) { mouseYSensitivity = sensitivity; }
+void APG_FPS_Base::SetMouseXSensitivity(float sensitivity) { mouseXSensitivity = sensitivity; }
 
 // Called to bind functionality to input
 void APG_FPS_Base::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -80,11 +86,3 @@ void APG_FPS_Base::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAxis("MouseX", this, &APG_FPS_Base::MouseX);
 	PlayerInputComponent->BindAxis("MouseY", this, &APG_FPS_Base::MouseY);
 }
-
-/** Getters */
-float APG_FPS_Base::GetMouseYSensitivity() { return mouseYSensitivity; }
-float APG_FPS_Base::GetMouseXSensitivity() { return mouseXSensitivity; }
-
-/** Setters */
-void APG_FPS_Base::SetMouseYSensitivity(float sensitivity) { mouseYSensitivity = sensitivity; }
-void APG_FPS_Base::SetMouseXSensitivity(float sensitivity) { mouseXSensitivity = sensitivity; }

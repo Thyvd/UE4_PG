@@ -34,6 +34,9 @@ protected:
 	void SetMouseYSensitivity(float sensitivity);
 	void SetMouseXSensitivity(float sensitivity);
 
+	float mouseYSensitivity;
+	float mouseXSensitivity;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -43,6 +46,4 @@ public:
 
 private:
 	
-	float mouseYSensitivity;
-	float mouseXSensitivity;
 };
