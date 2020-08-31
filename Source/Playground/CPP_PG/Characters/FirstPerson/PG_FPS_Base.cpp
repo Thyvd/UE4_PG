@@ -36,7 +36,6 @@ void APG_FPS_Base::BeginPlay()
 void APG_FPS_Base::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 // Movement Functions

@@ -16,10 +16,10 @@ APG_FPS_DistanceBasedScale::APG_FPS_DistanceBasedScale()
 	selectedObjectSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SelectedObjectSpringArmComponent"));
 	selectedObjectSpringArm->SetupAttachment(camera);
 	//selectedObjectSpringArm->TargetArmLength = objectSpringArmLength;
-	selectedObjectSpringArm->TargetArmLength = 1000.f;
+	selectedObjectSpringArm->TargetArmLength = 0;
 	
 	SetbCanSelect(true);
-	SetSelectDistance(1000.f);
+	SetSelectDistance(5000.f);
 }
 
 void APG_FPS_DistanceBasedScale::BeginPlay()
@@ -32,6 +32,21 @@ void APG_FPS_DistanceBasedScale::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
+	if (selectedObject != NULL)
+	{
+		FHitResult hitResultLocal = GetRaycastHitResult(true);
+		// Bug : raycast must ignore the hitResult
+
+		float distanceFromObstacle = hitResultLocal.Distance;
+		selectedObjectSpringArm->TargetArmLength = distanceFromObstacle * -1;
+		FVector hitResultLocalLoc = hitResultLocal.GetComponent()->GetRelativeLocation();
+		hitResultLocal.GetComponent()->SetRelativeLocation(FVector(hitResultLocalLoc.X, 0, hitResultLocalLoc.Z));
+		
+		float distancePercentage = distanceFromObstacle / initialDistance;
+		FVector hitResultScale = hitResult.Actor->GetActorScale3D();
+		hitResult.Actor->SetActorScale3D(hitResultScale * distancePercentage);
+		UE_LOG(LogTemp, Log, TEXT("Distance From Wall: %f"), distanceFromObstacle);
+	}
 }
 
 /** Distance Based Scale Functions*/
@@ -46,8 +61,12 @@ void APG_FPS_DistanceBasedScale::SelectObject()
 			selectedObject = hitResult.GetActor();
 			hitResult.Component->SetSimulatePhysics(false);
 			hitResult.Actor->AttachToComponent(selectedObjectSpringArm, FAttachmentTransformRules::KeepWorldTransform, USpringArmComponent::SocketName);
-
-			UE_LOG(LogTemp, Log, TEXT("You hit: %s"), *hitResult.Actor->GetName());
+			initialDistance = hitResult.Distance;
+			FVector hitResultRelLoc = hitResult.GetComponent()->GetRelativeLocation();
+			//hitResult.GetComponent()->SetRelativeLocation(FVector(hitResultRelLoc.X, 0, hitResultRelLoc.Z), false, nullptr, ETeleportType::ResetPhysics);
+			//hitResult.GetComponent()->SetRelativeLocation(FVector(0, 0, 0), false, nullptr, ETeleportType::ResetPhysics);
+			//hitResult.GetComponent()->SetWorldLocation(FVector(hitResultRelLoc.X, 0, hitResultRelLoc.Z), false, nullptr, ETeleportType::ResetPhysics);
+			UE_LOG(LogTemp, Log, TEXT("You hit: %s"), *hitResult.GetComponent()->GetRelativeLocation().ToString());
 		}
 		else
 		{
@@ -63,7 +82,7 @@ void APG_FPS_DistanceBasedScale::DeselectObject()
 		UE_LOG(LogTemp, Log, TEXT("Deselected"));
 		hitResult.Component->SetSimulatePhysics(true);
 		hitResult.Actor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-
+		selectedObject = NULL;
 	}
 }
 
