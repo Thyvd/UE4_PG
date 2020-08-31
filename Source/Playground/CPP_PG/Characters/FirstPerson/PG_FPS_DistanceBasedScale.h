@@ -25,26 +25,15 @@ protected:
 
 	void SelectObject();
 	void DeselectObject();
+
 	FHitResult GetRaycastHitResult(bool bDebugModeLocal);
+	bool SelectedObjectIsValid(FHitResult hitResultLocal);
 	
 	void SetbCanSelect(bool value);
 	void SetSelectDistance(float value);
 	
 	bool GetbCanSelect();
 	float GetSelectDistance();
-
-
-	FHitResult hitResult;
-	AActor* selectedObject;
-
-	bool bCanSelect;
-	float selectDistance;
-
-	UPROPERTY(EditAnywhere, Category = "Debug")
-		bool bDebugMode;
-	UPROPERTY(EditAnywhere, Category = "DistanceBasedScale")
-		float objectSpringArmLength;
-
 
 public:
 	// Called every frame
@@ -53,4 +42,14 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+private:
+
+	FHitResult hitResult;
+	AActor* selectedObject;
+	bool bCanSelect;
+	float selectDistance;
+	float objectSpringArmLength;
+
+	UPROPERTY(EditAnywhere, Category = "Debug")
+		bool bDebugMode;
 };

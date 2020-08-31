@@ -25,8 +25,7 @@ APG_FPS_DistanceBasedScale::APG_FPS_DistanceBasedScale()
 void APG_FPS_DistanceBasedScale::BeginPlay()
 {
 	Super::BeginPlay();
-	UE_LOG(LogTemp, Log, TEXT("%f"), objectSpringArmLength);
-	UE_LOG(LogTemp, Log, TEXT("%f"), selectedObjectSpringArm->TargetArmLength);
+
 }
 
 void APG_FPS_DistanceBasedScale::Tick(float DeltaTime)
@@ -42,19 +41,30 @@ void APG_FPS_DistanceBasedScale::SelectObject()
 	{
 		hitResult = GetRaycastHitResult(bDebugMode);
 
-		if (hitResult.bBlockingHit && hitResult.Component->IsSimulatingPhysics())
+		if (SelectedObjectIsValid(hitResult))
 		{
+			selectedObject = hitResult.GetActor();
 			hitResult.Component->SetSimulatePhysics(false);
 			hitResult.Actor->AttachToComponent(selectedObjectSpringArm, FAttachmentTransformRules::KeepWorldTransform, USpringArmComponent::SocketName);
 
 			UE_LOG(LogTemp, Log, TEXT("You hit: %s"), *hitResult.Actor->GetName());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Log, TEXT("Out of Range"));
 		}
 	}
 }
 
 void APG_FPS_DistanceBasedScale::DeselectObject()
 {
+	if (selectedObject != NULL)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Deselected"));
+		hitResult.Component->SetSimulatePhysics(true);
+		hitResult.Actor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 
+	}
 }
 
 FHitResult APG_FPS_DistanceBasedScale::GetRaycastHitResult(bool bDebugModeLocal)
@@ -64,7 +74,6 @@ FHitResult APG_FPS_DistanceBasedScale::GetRaycastHitResult(bool bDebugModeLocal)
 	FVector forwardVector = camera->GetForwardVector();
 	FVector end = (start + (forwardVector * GetSelectDistance()));
 	FCollisionQueryParams collisionParams;
-
 	
 	if (GetWorld()->LineTraceSingleByChannel(hitResultLocal, start, end, ECC_Visibility, collisionParams))
 	{
@@ -72,10 +81,17 @@ FHitResult APG_FPS_DistanceBasedScale::GetRaycastHitResult(bool bDebugModeLocal)
 		{ 
 			DrawDebugLine(GetWorld(), start, end, FColor::Green, false, 5.f, 0, 1); 
 		}
-
 	}
-
 	return hitResultLocal;
+}
+
+bool APG_FPS_DistanceBasedScale::SelectedObjectIsValid(FHitResult hitResultLocal)
+{
+	//bool L_isBlockingRaycast = hitResultLocal.bBlockingHit;
+	//bool L_isPhysicsEnabled = hitResultLocal.Component->IsSimulatingPhysics();
+	//bool L_isObjectAtRest = hitResultLocal.Actor->GetVelocity().Equals(FVector(0,0,0), 1.f);
+
+	return (hitResultLocal.bBlockingHit && hitResultLocal.Component->IsSimulatingPhysics()) ? true : false;
 }
 
 void APG_FPS_DistanceBasedScale::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
