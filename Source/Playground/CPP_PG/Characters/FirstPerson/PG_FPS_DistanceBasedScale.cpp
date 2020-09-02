@@ -11,7 +11,7 @@
 // Sets Default Values
 APG_FPS_DistanceBasedScale::APG_FPS_DistanceBasedScale()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	selectedObjectSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SelectedObjectSpringArmComponent"));
 	selectedObjectSpringArm->SetupAttachment(camera);
@@ -19,7 +19,7 @@ APG_FPS_DistanceBasedScale::APG_FPS_DistanceBasedScale()
 	selectedObjectSpringArm->TargetArmLength = 0;
 	
 	SetbCanSelect(true);
-	SetSelectDistance(5000.f);
+	SetSelectDistance(1000.f);
 }
 
 void APG_FPS_DistanceBasedScale::BeginPlay()
@@ -31,21 +31,26 @@ void APG_FPS_DistanceBasedScale::BeginPlay()
 void APG_FPS_DistanceBasedScale::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
+	//UE_LOG(LogTemp, Log, TEXT("TICK"));
+
 	if (selectedObject != NULL)
 	{
 		FHitResult hitResultLocal = GetRaycastHitResult(true);
 		// Bug : raycast must ignore the hitResult
 
 		float distanceFromObstacle = hitResultLocal.Distance;
-		selectedObjectSpringArm->TargetArmLength = distanceFromObstacle * -1;
-		FVector hitResultLocalLoc = hitResultLocal.GetComponent()->GetRelativeLocation();
-		hitResultLocal.GetComponent()->SetRelativeLocation(FVector(hitResultLocalLoc.X, 0, hitResultLocalLoc.Z));
+		selectedObjectSpringArm->TargetArmLength = (distanceFromObstacle * -1);
+		FVector hitResultLoc = hitResult.Component->GetRelativeLocation();
+		//hitResult.GetComponent()->SetRelativeLocation(FVector(hitResultLoc.X, distanceFromObstacle, hitResultLoc.Z));
 		
 		float distancePercentage = distanceFromObstacle / initialDistance;
 		FVector hitResultScale = hitResult.Actor->GetActorScale3D();
-		hitResult.Actor->SetActorScale3D(hitResultScale * distancePercentage);
+		hitResult.Actor->SetActorScale3D(FVector(1,1,1) * distancePercentage);
 		UE_LOG(LogTemp, Log, TEXT("Distance From Wall: %f"), distanceFromObstacle);
+		UE_LOG(LogTemp, Log, TEXT("initial Distance: %f"), initialDistance);
+		UE_LOG(LogTemp, Log, TEXT("Distance Percentage: %f"), distancePercentage);
+		UE_LOG(LogTemp, Log, TEXT("Hit result rel loc: %s"), *hitResultLoc.ToString());
+		
 	}
 }
 
@@ -61,11 +66,16 @@ void APG_FPS_DistanceBasedScale::SelectObject()
 			selectedObject = hitResult.GetActor();
 			hitResult.Component->SetSimulatePhysics(false);
 			hitResult.Actor->AttachToComponent(selectedObjectSpringArm, FAttachmentTransformRules::KeepWorldTransform, USpringArmComponent::SocketName);
-			initialDistance = hitResult.Distance;
+			hitResult.Component->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
+			hitResult.Component->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 			FVector hitResultRelLoc = hitResult.GetComponent()->GetRelativeLocation();
-			//hitResult.GetComponent()->SetRelativeLocation(FVector(hitResultRelLoc.X, 0, hitResultRelLoc.Z), false, nullptr, ETeleportType::ResetPhysics);
+			hitResult.GetComponent()->SetRelativeLocation(FVector(0, 0, 0), false, nullptr, ETeleportType::ResetPhysics);
 			//hitResult.GetComponent()->SetRelativeLocation(FVector(0, 0, 0), false, nullptr, ETeleportType::ResetPhysics);
 			//hitResult.GetComponent()->SetWorldLocation(FVector(hitResultRelLoc.X, 0, hitResultRelLoc.Z), false, nullptr, ETeleportType::ResetPhysics);
+			//hitResult.GetComponent()->SetRelativeLocation(FVector(hitResultLoc.X, distanceFromObstacle, hitResultLoc.Z));
+
+			initialDistance = GetRaycastHitResult(false).Distance;
+			//UE_LOG(LogTemp, Log, TEXT("Distance From Wall: %f"), distanceFromObstacle);
 			UE_LOG(LogTemp, Log, TEXT("You hit: %s"), *hitResult.GetComponent()->GetRelativeLocation().ToString());
 		}
 		else
@@ -82,6 +92,8 @@ void APG_FPS_DistanceBasedScale::DeselectObject()
 		UE_LOG(LogTemp, Log, TEXT("Deselected"));
 		hitResult.Component->SetSimulatePhysics(true);
 		hitResult.Actor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		hitResult.Component->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+		hitResult.Component->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Block);
 		selectedObject = NULL;
 	}
 }
