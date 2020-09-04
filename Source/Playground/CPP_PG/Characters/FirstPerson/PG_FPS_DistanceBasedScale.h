@@ -50,6 +50,7 @@ private:
 	float selectDistance;
 	float objectSpringArmLength;
 	float initialDistance;
+	float initialDistancePlayerToObject;
 
 	UPROPERTY(EditAnywhere, Category = "Debug")
 		bool bDebugMode;

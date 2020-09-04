@@ -35,21 +35,26 @@ void APG_FPS_DistanceBasedScale::Tick(float DeltaTime)
 
 	if (selectedObject != NULL)
 	{
-		FHitResult hitResultLocal = GetRaycastHitResult(true);
+		FHitResult hitResultLocal = GetRaycastHitResult(false);
 		// Bug : raycast must ignore the hitResult
 
 		float distanceFromObstacle = hitResultLocal.Distance;
-		selectedObjectSpringArm->TargetArmLength = (distanceFromObstacle * -1);
+		//selectedObjectSpringArm->TargetArmLength = (distanceFromObstacle * -1);
 		FVector hitResultLoc = hitResult.Component->GetRelativeLocation();
 		//hitResult.GetComponent()->SetRelativeLocation(FVector(hitResultLoc.X, distanceFromObstacle, hitResultLoc.Z));
 		
 		float distancePercentage = distanceFromObstacle / initialDistance;
 		FVector hitResultScale = hitResult.Actor->GetActorScale3D();
+		selectedObjectSpringArm->TargetArmLength = initialDistancePlayerToObject * -((distanceFromObstacle - initialDistancePlayerToObject)/ initialDistancePlayerToObject);
+		//selectedObjectSpringArm->TargetArmLength = initialDistancePlayerToObject * -(distancePercentage);
+		//selectedObjectSpringArm->TargetArmLength = initialDistancePlayerToObject + (distancePercentage);
 		hitResult.Actor->SetActorScale3D(FVector(1,1,1) * distancePercentage);
 		UE_LOG(LogTemp, Log, TEXT("Distance From Wall: %f"), distanceFromObstacle);
 		UE_LOG(LogTemp, Log, TEXT("initial Distance: %f"), initialDistance);
 		UE_LOG(LogTemp, Log, TEXT("Distance Percentage: %f"), distancePercentage);
 		UE_LOG(LogTemp, Log, TEXT("Hit result rel loc: %s"), *hitResultLoc.ToString());
+		UE_LOG(LogTemp, Log, TEXT("New Distance: %f"), initialDistancePlayerToObject * ((distanceFromObstacle - initialDistancePlayerToObject) / initialDistancePlayerToObject));
+
 		
 	}
 }
@@ -69,11 +74,11 @@ void APG_FPS_DistanceBasedScale::SelectObject()
 			hitResult.Component->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
 			hitResult.Component->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 			FVector hitResultRelLoc = hitResult.GetComponent()->GetRelativeLocation();
-			hitResult.GetComponent()->SetRelativeLocation(FVector(0, 0, 0), false, nullptr, ETeleportType::ResetPhysics);
+			hitResult.GetComponent()->SetRelativeLocation(FVector(hitResultRelLoc.X, 0, hitResultRelLoc.Z), false, nullptr, ETeleportType::ResetPhysics);
 			//hitResult.GetComponent()->SetRelativeLocation(FVector(0, 0, 0), false, nullptr, ETeleportType::ResetPhysics);
 			//hitResult.GetComponent()->SetWorldLocation(FVector(hitResultRelLoc.X, 0, hitResultRelLoc.Z), false, nullptr, ETeleportType::ResetPhysics);
 			//hitResult.GetComponent()->SetRelativeLocation(FVector(hitResultLoc.X, distanceFromObstacle, hitResultLoc.Z));
-
+			initialDistancePlayerToObject = hitResult.Distance;
 			initialDistance = GetRaycastHitResult(false).Distance;
 			//UE_LOG(LogTemp, Log, TEXT("Distance From Wall: %f"), distanceFromObstacle);
 			UE_LOG(LogTemp, Log, TEXT("You hit: %s"), *hitResult.GetComponent()->GetRelativeLocation().ToString());
